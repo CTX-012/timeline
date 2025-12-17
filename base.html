@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROBOT.SYS - Progress Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated Background Grid */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(32px, 6vw, 64px);
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ff88 0%, #00d4ff 50%, #ff00ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.8)); }
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #00d4ff;
+            letter-spacing: 3px;
+            opacity: 0.9;
+        }
+
+        /* Architecture Diagram */
+        .architecture {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .arch-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: #ff00ff;
+            margin-bottom: 25px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .arch-layer {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 12px;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+
+        .arch-layer:hover {
+            transform: translateX(10px);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .arch-layer.cloud { border-color: #ff00ff; }
+        .arch-layer.edge { border-color: #00d4ff; }
+        .arch-layer.sensors { border-color: #00ff88; }
+
+        .layer-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #00ff88;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .layer-components {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .component {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #00ff88;
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00ff88, #00d4ff, #ff00ff);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: translateX(0);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.3);
+            border-color: rgba(0, 255, 136, 0.6);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #00ff88;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00d4ff);
+            border-radius: 10px;
+            transition: width 1s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        /* Timeline */
+        .timeline-section {
+            margin: 50px 0;
+        }
+
+        .section-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            color: #ff00ff;
+            text-align: center;
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, #00ff88, #00d4ff, #ff00ff);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 40px;
+            padding-left: 80px;
+            cursor: pointer;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 60px;
+            background: rgba(26, 31, 58, 0.9);
+            border: 3px solid #00ff88;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .timeline-marker.completed {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            border-color: #00ff88;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+        }
+
+        .timeline-marker.current {
+            background: linear-gradient(135deg, #ff00ff, #00d4ff);
+            border-color: #ff00ff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.8); }
+        }
+
+        .timeline-content {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover .timeline-content {
+            transform: translateX(10px);
+            border-color: rgba(0, 255, 136, 0.6);
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #00d4ff;
+            margin-bottom: 8px;
+        }
+
+        .timeline-status {
+            font-size: 12px;
+            color: #ff00ff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timeline-description {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #b0b0b0;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(0, 255, 136, 0.3);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .timeline-item.expanded .timeline-description {
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        .task-list {
+            margin-top: 15px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .task {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            padding: 8px;
+            background: rgba(0, 255, 136, 0.05);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .task:hover {
+            background: rgba(0, 255, 136, 0.1);
+            transform: translateX(5px);
+        }
+
+        .task-icon {
+            font-size: 14px;
+            min-width: 20px;
+        }
+
+        .task-icon.completed { color: #00ff88; }
+        .task-icon.pending { color: #666; }
+
+        /* Floating Robot */
+        .robot-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.4);
+            animation: float 3s ease-in-out infinite;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .robot-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.6);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            h1 { font-size: 32px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .timeline::before { left: 20px; }
+            .timeline-item { padding-left: 70px; }
+            .timeline-marker { width: 50px; height: 50px; font-size: 20px; }
+            .robot-float { width: 60px; height: 60px; font-size: 28px; bottom: 20px; right: 20px; }
+        }
+
+        /* Pulse effect for current items */
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <div class="container">
+        <header>
+            <h1>ROBOT.SYS v2.0</h1>
+            <p class="subtitle">AUTONOMOUS SYSTEM DASHBOARD</p>
+        </header>
+
+        <!-- Architecture Diagram -->
+        <div class="architecture">
+            <h2 class="arch-title">▼ SYSTEM ARCHITECTURE ▼</h2>
+            
+            <div class="arch-layer cloud">
+                <div class="layer-name">
+                    ☁️ CLOUD LAYER (Modal)
+                </div>
+                <div class="layer-components">
+                    <div class="component">Object Detection (YOLO/VLM)</div>
+                    <div class="component">VLM/LLM Reasoning</div>
+                    <div class="component">Scene Understanding</div>
+                    <div class="component">Intent Analysis</div>
+                </div>
+            </div>
+
+            <div class="arch-layer edge">
+                <div class="layer-name">
+                    🖥️ EDGE LAYER (Jetson Nano)
+                </div>
+                <div class="layer-components">
+                    <div class="component">Decision Layer</div>
+                    <div class="component">State Machine</div>
+                    <div class="component">Arbitration Logic</div>
+                    <div class="component">Safety Override</div>
+                </div>
+            </div>
+
+            <div class="arch-layer sensors">
+                <div class="layer-name">
+                    📡 PIPELINE LAYER
+                </div>
+                <div class="layer-components">
+                    <div class="component">🎙️ STS (Speech-to-Text)</div>
+                    <div class="component">👁️ Object Detection</div>
+                    <div class="component">🧭 Nav2 Navigation</div>
+                    <div class="component">📊 Telemetry</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Overall Progress</div>
+                <div class="stat-value">25%</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: 25%;"></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Tasks Completed</div>
+                <div class="stat-value">8/32</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: 25%;"></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Current Phase</div>
+                <div class="stat-value">WORLD-1</div>
+                <div style="font-size: 12px; color: #00d4ff; margin-top: 8px;">Decision Layer Design</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Systems Online</div>
+                <div class="stat-value">2/8</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: 25%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-section">
+            <h2 class="section-header">PROJECT TIMELINE</h2>
+            
+            <div class="timeline">
+                <!-- Completed Phase -->
+                <div class="timeline-item expanded" onclick="toggleTimeline(this)">
+                    <div class="timeline-marker completed">✓</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">WORLD 1-1: Pipeline Contracts</div>
+                        <div class="timeline-status">✅ Completed</div>
+                        <div class="timeline-description">
+                            Successfully locked contracts for STS and Object Detection pipelines with defined input/output specifications and timing guarantees.
+                            <div class="task-list">
+                                <div class="task">
+                                    <span class="task-icon completed">✓</span>
+                                    <span>STS Input Contract Defined</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon completed">✓</span>
+                                    <span>STS Output Contract Locked</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon completed">✓</span>
+                                    <span>Timing Guarantees Set</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon completed">✓</span>
+                                    <span>Failure Behavior Mapped</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon completed">✓</span>
+                                    <span>Object Detection Contract Finalized</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon completed">✓</span>
+                                    <span>Telemetry Integration Complete</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Phase -->
+                <div class="timeline-item expanded pulse-glow" onclick="toggleTimeline(this)">
+                    <div class="timeline-marker current">◆</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">WORLD 1-2: Decision Layer Design</div>
+                        <div class="timeline-status">🔄 In Progress</div>
+                        <div class="timeline-description">
+                            Designing state machine, priority rules, and arbitration logic for autonomous decision-making.
+                            <div class="task-list">
+                                <div class="task">
+                                    <span class="task-icon completed">✓</span>
+                                    <span>State Machine Architecture</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Priority Rules Definition</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Arbitration Logic</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Safety Override System</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Integration Testing</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Future Phases -->
+                <div class="timeline-item" onclick="toggleTimeline(this)">
+                    <div class="timeline-marker">◯</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">WORLD 1-3: Nav2 Integration</div>
+                        <div class="timeline-status">🔒 Locked</div>
+                        <div class="timeline-description">
+                            Define Nav2 command interface and perception input filtering.
+                            <div class="task-list">
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Nav2 Command Interface</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Perception Input Filtering</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Constraint Annotation System</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Emergency Stop Protocol</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item" onclick="toggleTimeline(this)">
+                    <div class="timeline-marker">◯</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">WORLD 1-4: Failure Mode Matrix</div>
+                        <div class="timeline-status">🔒 Locked</div>
+                        <div class="timeline-description">
+                            System-wide degraded behavior mapping for robustness.
+                            <div class="task-list">
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Cloud Failure Scenarios</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Latency Spike Handling</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Vision Instability Protocol</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Safe Idle Mode</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item" onclick="toggleTimeline(this)">
+                    <div class="timeline-marker">◯</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">WORLD 2: Closed-Loop Testing</div>
+                        <div class="timeline-status">🔒 Locked</div>
+                        <div class="timeline-description">
+                            Comprehensive stress testing and reliability validation.
+                            <div class="task-list">
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Latency Injection Tests</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Packet Loss Simulation</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Noise Injection Protocol</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Recovery Time Measurement</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item" onclick="toggleTimeline(this)">
+                    <div class="timeline-marker">★</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">FINAL: Production Ready</div>
+                        <div class="timeline-status">🏆 Legendary Unlock</div>
+                        <div class="timeline-description">
+                            Full system integration and deployment to production.
+                            <div class="task-list">
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>All Subsystems Validated</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Documentation Complete</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Field Testing Passed</span>
+                                </div>
+                                <div class="task">
+                                    <span class="task-icon pending">◯</span>
+                                    <span>Deployment Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="robot-float" onclick="scrollToTop()">🤖</div>
+
+    <script>
+        function toggleTimeline(element) {
+            element.classList.toggle('expanded');
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Add smooth scroll animation on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.timeline-item, .stat-card').forEach(item => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(30px)';
+                item.style.transition = 'all 0.6s ease';
+                observer.observe(item);
+            });
+        });
+    </script>
+</body>
+</html>
